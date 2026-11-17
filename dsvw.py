@@ -58,7 +58,7 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
             elif path == "/users.json":
                 content = "%s%s%s" % ("" if not "callback" in params else "%s(" % params["callback"], json.dumps(dict((_.findtext("username"), _.findtext("surname")) for _ in xml.etree.ElementTree.fromstring(USERS_XML).findall("user"))), "" if not "callback" in params else ")")
             elif path == "/login":
-                found = bool(cursor.execute("SELECT * FROM users WHERE username='" + re.sub(r"[^\w]", "", params.get("username", "")) + "' AND password='" + params.get("password", "") + "'").fetchall())
+                found = bool(cursor.execute("SELECT * FROM users WHERE username=? AND password=?", (re.sub(r"[^\w]", "", params.get("username", "")), params.get("password", ""))).fetchall())
                 cookie = "SESSIONID=%s; path=/" % "".join(random.choices(string.ascii_letters + string.digits, k=20)) if found else "SESSIONID=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
                 content += "%s<meta http-equiv=\"Set-Cookie\" content=\"%s\">%s" % ("Welcome <b>%s</b>" % re.sub(r"[^\w]", "", params.get("username", "")) if found else "The username and/or password is incorrect", cookie, "<meta http-equiv=\"refresh\" content=\"1; url=/\"/>" if found else "")
             else: code, content = http.client.NOT_FOUND, "%s<div><span>404 Not Found</span></div>" % content
